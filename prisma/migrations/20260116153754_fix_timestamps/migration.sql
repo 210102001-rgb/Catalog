@@ -1,0 +1,31 @@
+-- CreateTable
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `uuid` VARCHAR(36) NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `password_hash` VARCHAR(255) NULL,
+    `role` VARCHAR(20) NOT NULL DEFAULT 'customer',
+    `user_type` VARCHAR(20) NOT NULL DEFAULT 'individual',
+    `company_name` VARCHAR(255) NULL,
+    `phone` VARCHAR(20) NULL,
+    `address` TEXT NULL,
+    `city` VARCHAR(100) NULL,
+    `postal_code` VARCHAR(20) NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'pending_verification',
+    `email_verified_at` TIMESTAMP NULL,
+    `last_login_at` TIMESTAMP NULL,
+    `last_login_ip` VARCHAR(45) NULL,
+    `remember_token` VARCHAR(100) NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL,
+    `deleted_at` TIMESTAMP NULL,
+
+    UNIQUE INDEX `User_uuid_key`(`uuid`),
+    UNIQUE INDEX `User_email_key`(`email`),
+    INDEX `idx_users_email`(`email`),
+    INDEX `idx_users_status`(`status`),
+    INDEX `idx_users_role`(`role`),
+    INDEX `idx_users_deleted_at`(`deleted_at`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

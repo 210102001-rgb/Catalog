@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @db.VarChar(36)
+  name            String    @db.VarChar(100)
+  email           String    @unique @db.VarChar(255)
+  password_hash   String?   @db.VarChar(255)
+  role            String    @default("customer") @db.VarChar(20)
+  user_type       String    @default("individual") @db.VarChar(20)
+  company_name    String?   @db.VarChar(255)
+  phone           String?   @db.VarChar(20)
+  address         String?   @db.Text
+  city            String?   @db.VarChar(100)
+  postal_code     String?   @db.VarChar(20)
+  status          String    @default("pending_verification") @db.VarChar(20)
+  email_verified_at DateTime?  @db.Timestamp
+  last_login_at   DateTime?   @db.Timestamp
+  last_login_ip   String?     @db.VarChar(45)
+  remember_token  String?     @db.VarChar(100)
+  created_at      DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp
+  updated_at      DateTime  @updatedAt @db.Timestamp
+  deleted_at      DateTime? @db.Timestamp
+  
+  @@index([email], name: "idx_users_email")
+  @@index([status], name: "idx_users_status")
+  @@index([role], name: "idx_users_role")
+  @@index([deleted_at], name: "idx_users_deleted_at")
+}

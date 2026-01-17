@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Kelola Produk Katalog - ReklameKu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111a22",
+                        "card-dark": "#233648",
+                        "text-secondary": "#92adc9"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden h-screen flex">
+    <!-- Side Navigation -->
+    <aside class="w-64 bg-background-dark border-r border-card-dark flex flex-col flex-shrink-0 h-full">
+        <div class="p-6 flex items-center gap-3">
+            <div class="bg-primary rounded-full size-10 flex items-center justify-center text-white">
+                <span class="material-symbols-outlined">campaign</span>
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-white text-base font-bold leading-normal tracking-tight">ReklameKu</h1>
+                <p class="text-text-secondary text-xs font-normal">Admin Console</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-4 py-2 flex flex-col gap-2 overflow-y-auto">
+            <!-- Dashboard -->
+            <a class="flex items-center gap-3 px-3 py-3 rounded-lg text-text-secondary hover:bg-card-dark hover:text-white transition-colors" href="dashboard.html">
+                <span class="material-symbols-outlined">grid_view</span>
+                <p class="text-sm font-medium">Dashboard</p>
+            </a>
+            
+            <!-- Kelola Produk Katalog (Active) -->
+            <a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-primary text-white shadow-lg shadow-primary/20 transition-all" href="produk.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+                <p class="text-sm font-semibold">Kelola Produk</p>
+            </a>
+            
+            <!-- Kelola Pesanan -->
+            <a class="flex items-center gap-3 px-3 py-3 rounded-lg text-text-secondary hover:bg-card-dark hover:text-white transition-colors" href="manage.html">
+                <span class="material-symbols-outlined">shopping_cart</span>
+                <p class="text-sm font-medium">Kelola Pesanan</p>
+            </a>
+            
+            <!-- Kelola Chat & Penawaran -->
+            <a class="flex items-center gap-3 px-3 py-3 rounded-lg text-text-secondary hover:bg-card-dark hover:text-white transition-colors" href="managechat.html">
+                <span class="material-symbols-outlined">chat_bubble</span>
+                <p class="text-sm font-medium">Chat & Penawaran</p>
+                <span class="ml-auto bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">5</span>
+            </a>
+            
+            <!-- Kelola Data Customer -->
+            <a class="flex items-center gap-3 px-3 py-3 rounded-lg text-text-secondary hover:bg-card-dark hover:text-white transition-colors" href="managecustomerdata.html">
+                <span class="material-symbols-outlined">group</span>
+                <p class="text-sm font-medium">Data Customer</p>
+            </a>
+            
+            <!-- Laporan & Rekap -->
+            <a class="flex items-center gap-3 px-3 py-3 rounded-lg text-text-secondary hover:bg-card-dark hover:text-white transition-colors" href="admin-reports.html">
+                <span class="material-symbols-outlined">analytics</span>
+                <p class="text-sm font-medium">Laporan & Rekap</p>
+            </a>
+            
+            <div class="mt-4 pt-4 border-t border-card-dark">
+                <p class="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">System</p>
+                <a class="flex items-center gap-3 px-3 py-3 rounded-lg text-text-secondary hover:bg-card-dark hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined">settings</span>
+                    <p class="text-sm font-medium">Pengaturan</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-3 rounded-lg text-text-secondary hover:bg-card-dark hover:text-white transition-colors" href="login.html">
+                    <span class="material-symbols-outlined">logout</span>
+                    <p class="text-sm font-medium">Keluar</p>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="p-4 border-t border-card-dark">
+            <div class="flex items-center gap-3">
+                <div class="size-9 rounded-full bg-gradient-to-tr from-purple-500 to-primary flex items-center justify-center text-white font-bold text-sm">
+                    AD
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-sm font-medium text-white">Admin User</p>
+                    <p class="text-xs text-text-secondary">admin@reklameku.com</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-background-dark">
+        <!-- Top Header -->
+        <header class="h-16 flex items-center justify-between px-8 border-b border-card-dark bg-background-dark/95 backdrop-blur z-20 sticky top-0">
+            <div class="flex items-center gap-4">
+                <h2 class="text-white text-lg font-bold tracking-tight">Kelola Produk Katalog</h2>
+            </div>
+            <div class="flex items-center gap-6">
+                <!-- Search -->
+                <div class="relative hidden md:block group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-secondary group-focus-within:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">search</span>
+                    </div>
+                    <input class="bg-card-dark border-none text-white text-sm rounded-lg pl-10 pr-4 py-2 w-64 focus:ring-2 focus:ring-primary placeholder-text-secondary" placeholder="Cari produk..." type="text"/>
+                </div>
+                <div class="flex items-center gap-3 border-l border-card-dark pl-6">
+                    <button class="relative p-2 rounded-lg bg-card-dark text-white hover:bg-primary/20 hover:text-primary transition-all">
+                        <span class="material-symbols-outlined text-[20px]">notifications</span>
+                        <span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-card-dark"></span>
+                    </button>
+                    <button class="p-2 rounded-lg bg-card-dark text-white hover:bg-primary/20 hover:text-primary transition-all">
+                        <span class="material-symbols-outlined text-[20px]">tune</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+            <!-- Page Heading & Actions -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div class="flex flex-col gap-2">
+                    <h1 class="text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em] text-white">Kelola Produk Katalog</h1>
+                    <p class="text-text-secondary text-base font-normal">Kelola, lacak, dan perbarui inventori papan reklame Anda.</p>
+                </div>
+                <button class="flex items-center justify-center gap-2 rounded-lg h-11 px-5 bg-primary hover:bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-[20px]">add</span>
+                    <span>Tambah Papan Reklame</span>
+                </button>
+            </div>
+            
+            <!-- Toolbar Section -->
+            <div class="flex flex-col lg:flex-row gap-4 bg-card-dark p-4 rounded-xl border border-white/5 shadow-sm">
+                <!-- Search Bar -->
+                <div class="flex-1 min-w-[280px]">
+                    <div class="flex w-full items-center rounded-lg h-10 bg-background-dark border border-white/10 focus-within:border-primary transition-colors">
+                        <div class="text-text-secondary flex items-center justify-center pl-3">
+                            <span class="material-symbols-outlined">search</span>
+                        </div>
+                        <input class="w-full bg-transparent border-none text-white placeholder:text-text-secondary h-full px-3 text-sm focus:ring-0" placeholder="Cari berdasarkan lokasi, ID, atau ukuran..."/>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="relative min-w-[160px]">
+                        <select class="appearance-none w-full bg-background-dark border border-white/10 text-white text-sm rounded-lg h-10 px-3 pr-10 focus:outline-none focus:border-primary cursor-pointer">
+                            <option disabled selected value="">Filter Status</option>
+                            <option value="all">Semua Status</option>
+                            <option value="available">Tersedia</option>
+                            <option value="booked">Terpesan</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
+                            <span class="material-symbols-outlined">expand_more</span>
+                        </div>
+                    </div>
+                    
+                    <div class="relative min-w-[160px]">
+                        <select class="appearance-none w-full bg-background-dark border border-white/10 text-white text-sm rounded-lg h-10 px-3 pr-10 focus:outline-none focus:border-primary cursor-pointer">
+                            <option disabled selected value="">Tipe Papan</option>
+                            <option value="all">Semua Tipe</option>
+                            <option value="digital">Digital</option>
+                            <option value="static">Statis</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
+                            <span class="material-symbols-outlined">expand_more</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Inventory Table -->
+            <div class="bg-card-dark rounded-xl border border-white/5 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-background-dark/50 border-b border-white/5">
+                                <th class="p-4 w-12">
+                                    <input class="rounded border-white/20 bg-background-dark text-primary focus:ring-offset-0 focus:ring-primary/20 size-4" type="checkbox"/>
+                                </th>
+                                <th class="p-4 text-xs font-semibold text-text-secondary uppercase tracking-wider">Papan Reklame</th>
+                                <th class="p-4 text-xs font-semibold text-text-secondary uppercase tracking-wider">Lokasi</th>
+                                <th class="p-4 text-xs font-semibold text-text-secondary uppercase tracking-wider">Dimensi</th>
+                                <th class="p-4 text-xs font-semibold text-text-secondary uppercase tracking-wider">Harga/Bulan</th>
+                                <th class="p-4 text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
+                                <th class="p-4 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            <!-- Rows (omitted for brevity) -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination Footer -->
+                <div class="flex items-center justify-between p-4 border-t border-white/5 bg-background-dark/30">
+                    <p class="text-sm text-text-secondary">Menampilkan <span class="font-medium text-white">1-3</span> dari <span class="font-medium text-white">42</span> item</p>
+                    <div class="flex items-center gap-2">
+                        <button class="p-1 rounded-md text-text-secondary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <button class="p-1 rounded-md text-text-secondary hover:text-white">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
