@@ -34,3 +34,18 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+Project notes for this workspace
+* Existing static HTML files from the parent folder were copied into `public/html/`.
+* Each file is available at `/<slug>` where `slug` is the filename without `.html` (e.g. `/katalog`).
+* The site uses Tailwind via CDN (same as the original files). For production builds consider integrating Tailwind locally.
+
+Quick steps to run locally:
+```powershell
+cd catalog
+npm install
+npm run dev
+# browse http://localhost:3000
+```
