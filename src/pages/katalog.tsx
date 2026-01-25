@@ -7,9 +7,16 @@ export default function Katalog() {
     {
       id: '1',
       name: 'Baliho 3x6m',
-      price: 5000000,
+      type: 'BALIHO',
+      status: 'TERSEDIA',
+      statusColor: 'bg-green-500',
+      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800',
       description: 'Baliho ukuran besar untuk promosi outdoor',
-      image: '/images/baliho.jpg'
+      impressions: '50k/minggu',
+      size: '3m x 6m',
+      location: 'Jakarta Pusat',
+      price: 'Rp 5.000.000',
+      rating: 4.8
     },
     // Add more sample products as needed
   ];
@@ -30,7 +37,21 @@ export default function Katalog() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard 
+            key={product.id}
+            name={product.name}
+            type={product.type}
+            status={product.status}
+            statusColor={product.statusColor}
+            image={product.image}
+            description={product.description}
+            impressions={product.impressions}
+            size={product.size}
+            location={product.location}
+            price={product.price}
+            rating={product.rating}
+            onSelect={() => console.log('Selected:', product.name)}
+          />
         ))}
       </div>
     </div>
