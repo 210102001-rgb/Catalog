@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const { user, loading, logout } = useAuth();
 
   // Fix for hydration mismatch
   useEffect(() => {
@@ -17,10 +19,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const handleRouteChange = () => {
       setIsOpen(false);
     };
-    
-    router.events.on('routeChangeStart', handleRouteChange);
+
+    router.events.on("routeChangeStart", handleRouteChange);
     return () => {
-      router.events.off('routeChangeStart', handleRouteChange);
+      router.events.off("routeChangeStart", handleRouteChange);
     };
   }, [router.events]);
 
@@ -30,11 +32,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   const navItems = [
-    { href: '/produk', label: 'Kelola Produk', icon: 'inventory_2' },
-    { href: '/manage', label: 'Kelola Pesanan', icon: 'receipt_long' },
-    { href: '/managechat', label: 'Chat & Penawaran', icon: 'chat' },
-    { href: '/managecustomerdata', label: 'Data Customer', icon: 'people' },
-    { href: '/admin-reports', label: 'Laporan & Rekap', icon: 'bar_chart' },
+    { href: "/produk", label: "Kelola Produk", icon: "inventory_2" },
+    { href: "/manage", label: "Kelola Pesanan", icon: "receipt_long" },
+    { href: "/managechat", label: "Chat & Penawaran", icon: "chat" },
+    { href: "/managecustomerdata", label: "Data Customer", icon: "people" },
+    { href: "/admin-reports", label: "Laporan & Rekap", icon: "bar_chart" },
   ];
 
   return (
@@ -43,14 +45,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="md:hidden bg-white dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label="Toggle menu"
-            >
-              <span className="material-symbols-outlined">
-                {isOpen ? 'close' : 'menu'}
-              </span>
+            <button onClick={() => setIsOpen(!isOpen)} className="size-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center" aria-label="Toggle menu">
+              <span className="material-symbols-outlined text-xl">{isOpen ? "close" : "menu"}</span>
             </button>
             <Link href="/" className="flex items-center gap-2">
               <div className="bg-primary rounded-full w-8 h-8 flex items-center justify-center text-white">
@@ -79,9 +75,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                  router.pathname === item.href
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  router.pathname === item.href ? "bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 <span className="material-symbols-outlined text-xl">{item.icon}</span>
@@ -101,7 +95,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex flex-col">
               <h1 className="text-lg font-bold leading-tight">ReklameKu</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Admin Console</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{loading ? "Loading..." : user?.role === "admin" ? "Admin Console" : "Console"}</p>
             </div>
           </Link>
         </div>
@@ -112,9 +106,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                router.pathname === item.href
-                  ? 'bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                router.pathname === item.href ? "bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               <span className="material-symbols-outlined text-xl">{item.icon}</span>
@@ -129,13 +121,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <span className="material-symbols-outlined text-gray-700 dark:text-gray-300">person</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Admin User</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">admin@reklameku.com</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{loading ? "Loading..." : user ? user.name : "Admin User"}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{loading ? "Loading..." : user ? user.email : "admin@reklameku.com"}</p>
             </div>
             <button className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
-              <span className="material-symbols-outlined text-gray-500 dark:text-gray-400">
-                more_vert
-              </span>
+              <span className="material-symbols-outlined text-gray-500 dark:text-gray-400">more_vert</span>
             </button>
           </div>
         </div>
@@ -143,9 +133,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="flex-1 md:pl-64 pt-16 md:pt-0">
-        <div className="p-4 md:p-6">
-          {children}
-        </div>
+        <div className="p-4 md:p-6">{children}</div>
       </main>
     </div>
   );

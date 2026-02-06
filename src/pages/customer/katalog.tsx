@@ -1,182 +1,347 @@
-import React, { useState } from 'react';
-import Head from 'next/head';
-import CustomerLayout from '../../components/customer/CustomerLayout';
-import ProductCard from '../../components/ProductCard';
-import FilterModal from '../../components/customer/modals/FilterModal';
-import DateRangeModal from '../../components/customer/modals/DateRangeModal';
-import CheckoutModal from '../../components/customer/modals/CheckoutModal';
+import React, { useState, useEffect } from "react";
+import Head from "next/head";
+import CustomerLayout from "../../components/customer/CustomerLayout";
+import ProductCard from "../../components/ProductCard";
+import FilterModal, { FilterState } from "../../components/customer/modals/FilterModal";
+import DateRangeModal from "../../components/customer/modals/DateRangeModal";
+import CheckoutModal from "../../components/customer/modals/CheckoutModal";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function Katalog() {
-    const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [isDateOpen, setIsDateOpen] = useState(false);
-    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const [dateRange, setDateRange] = useState('15 Nov - 15 Des');
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6;
+  const { user, loading } = useAuth();
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isDateOpen, setIsDateOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [dateRange, setDateRange] = useState("15 Nov - 15 Des");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [products, setProducts] = useState<any[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<FilterState>({
+    priceMin: 0,
+    priceMax: 200000000,
+    types: [],
+    city: "",
+  });
+  const itemsPerPage = 6;
 
-    const baseProducts: any[] = [
-        { id: 1, name: 'Tol Jagorawi KM 4', type: 'DIGITAL', status: 'TERSEDIA', statusColor: 'bg-green-500', image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&q=80', description: 'Akses masuk Jakarta, traffic padat commuter.', impressions: '450k/minggu', size: "14' x 48'", location: 'Jakarta Timur', price: 'Rp 32jt', rating: 4.8 },
-        { id: 2, name: 'Bundaran HI', type: 'STATIS', status: 'TERSEDIA', statusColor: 'bg-green-500', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80', description: 'Jantung kota Jakarta, visibilitas tinggi.', impressions: '850k/minggu', size: "20' x 60'", location: 'Jakarta Pusat', price: 'Rp 125jt', rating: 4.9 },
-        { id: 3, name: 'Sudirman CBD', type: 'LED', status: 'TERBATAS', statusColor: 'bg-yellow-600', image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&q=80', description: 'Kawasan bisnis premium Jakarta.', impressions: '210k/minggu', size: "10' x 22'", location: 'Jakarta Selatan', price: 'Rp 18jt', rating: 4.5 },
-        { id: 4, name: 'Tol Cikampek KM 15', type: 'DIGITAL', status: 'TERSEDIA', statusColor: 'bg-green-500', image: 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?auto=format&fit=crop&w=800&q=80', description: 'Jalur utama menuju Bandung dan Jawa Barat.', impressions: '320k/minggu', size: "12' x 36'", location: 'Karawang', price: 'Rp 22jt', rating: 4.6 },
-    ];
+  useEffect(() => {
+    if (user) {
+      const fetchProducts = async () => {
+        try {
+          setLoadingProducts(true);
+          const response = await fetch("/api/customer/products", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
 
-    // Mock expansion of products to test pagination
-    const allProducts = Array.from({ length: 15 }, (_, i) => ({
-        ...baseProducts[i % baseProducts.length],
-        id: i + 1,
-        name: `${baseProducts[i % baseProducts.length].name} #${i + 1}`
-    }));
+          if (response.ok) {
+            const data = await response.json();
+            const productsData = data.products || [];
+            setProducts(productsData);
+            applyFilters(productsData, searchQuery, filters);
+          }
+        } catch (error) {
+          console.error("Error fetching products:", error);
+        } finally {
+          setLoadingProducts(false);
+        }
+      };
 
-    const totalPages = Math.ceil(allProducts.length / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentProducts = allProducts.slice(indexOfFirstItem, indexOfLastItem);
+      fetchProducts();
+    }
+  }, [user]);
 
-    const handleApplyDate = (start: string, end: string) => {
-        setDateRange(`${start} - ${end}`);
-    };
+  // Apply filters when search or filters change
+  useEffect(() => {
+    applyFilters(products, searchQuery, filters);
+  }, [searchQuery, filters, products]);
 
-    const handleSelectProduct = (product: any) => {
-        setSelectedProduct(product);
-        setIsCheckoutOpen(true);
-    };
+  const applyFilters = (productsData: any[], query: string, filterState: FilterState) => {
+    let filtered = [...productsData];
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    // Search filter
+    if (query.trim()) {
+      const lowerQuery = query.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.name?.toLowerCase().includes(lowerQuery) ||
+        p.location?.toLowerCase().includes(lowerQuery) ||
+        p.type?.toLowerCase().includes(lowerQuery)
+      );
+    }
 
+    // Type filter
+    if (filterState.types.length > 0) {
+      filtered = filtered.filter(p =>
+        filterState.types.some(type => p.type?.toLowerCase().includes(type.toLowerCase()))
+      );
+    }
+
+    // City filter
+    if (filterState.city) {
+      filtered = filtered.filter(p =>
+        p.location?.toLowerCase().includes(filterState.city.toLowerCase())
+      );
+    }
+
+    // Price filter (assuming price is stored as number or formatted string)
+    if (filterState.priceMax > 0) {
+      filtered = filtered.filter(p => {
+        const price = typeof p.price === 'number' ? p.price : parseFloat(p.price?.replace(/[^\d.]/g, '') || '0');
+        return price >= filterState.priceMin && price <= filterState.priceMax;
+      });
+    }
+
+    setFilteredProducts(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const handleApplyFilters = (newFilters: FilterState) => {
+    setFilters(newFilters);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      priceMin: 0,
+      priceMax: 200000000,
+      types: [],
+      city: "",
+    });
+    setSearchQuery("");
+  };
+
+  const hasActiveFilters = searchQuery.trim() || filters.types.length > 0 || filters.city || filters.priceMin > 0 || filters.priceMax < 200000000;
+
+  // Apply pagination
+  const totalPages = Math.ceil((filteredProducts && Array.isArray(filteredProducts) ? filteredProducts.length : 0) / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = filteredProducts && Array.isArray(filteredProducts) ? filteredProducts.slice(indexOfFirstItem, indexOfLastItem) : [];
+
+  const handleApplyDate = (start: string, end: string) => {
+    setDateRange(`${start} - ${end}`);
+  };
+
+  const handleSelectProduct = (product: any) => {
+    setSelectedProduct(product);
+    setIsCheckoutOpen(true);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (loading || loadingProducts) {
     return (
-        <>
-            <Head>
-                <title>Katalog Produk - ReklameKu</title>
-            </Head>
-            <CustomerLayout activePage="katalog" title="Katalog Produk" showSearch={true}>
-                <main className="flex flex-col flex-1 bg-[#101922] relative p-4 md:p-8">
-                    <div className="max-w-7xl mx-auto w-full space-y-6">
-                        {/* Page Heading & Controls */}
-                        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-                            <div className="flex flex-col gap-2">
-                                <h1 className="text-white text-3xl md:text-5xl font-black leading-tight tracking-tight">Katalog Papan Reklame</h1>
-                                <p className="text-[#92adc9] text-base font-normal max-w-xl">Jelajahi dan pilih lokasi papan reklame strategis untuk kampanye Anda berikutnya.</p>
-                            </div>
-                            <div className="flex bg-[#1a2633] p-1.5 rounded-2xl border border-white/5">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-primary text-white shadow-lg' : 'text-[#5a718a] hover:text-white'}`}
-                                >
-                                    Grid View
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('map')}
-                                    className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-primary text-white shadow-lg' : 'text-[#5a718a] hover:text-white'}`}
-                                >
-                                    Map View
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Filters Row */}
-                        <div className="flex gap-4 items-center bg-[#1a2633] p-4 rounded-2xl border border-white/5 shadow-xl">
-                            <div className="flex-1 relative md:hidden">
-                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#92adc9] text-[18px]">search</span>
-                                <input className="w-full bg-[#111a22] border border-white/5 rounded-xl h-12 pl-12 pr-4 text-white text-sm" placeholder="Cari lokasi..." />
-                            </div>
-                            <div className="hidden md:flex gap-3">
-                                <button onClick={() => setIsDateOpen(true)} className="flex items-center gap-3 px-6 h-12 rounded-xl border border-white/5 bg-[#111a22] text-white hover:bg-[#233648] transition-all">
-                                    <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
-                                    <span className="text-sm font-bold uppercase tracking-wider">{dateRange}</span>
-                                </button>
-                                <button onClick={() => setIsFilterOpen(true)} className="flex items-center gap-3 px-6 h-12 rounded-xl border border-white/5 bg-[#111a22] text-white hover:bg-[#233648] transition-all">
-                                    <span className="material-symbols-outlined text-primary text-[20px]">tune</span>
-                                    <span className="text-sm font-bold uppercase tracking-wider">Lainnya</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-8 items-start">
-                            {/* Desktop Filter Aside */}
-                            <aside className="hidden lg:block w-72 shrink-0 space-y-8">
-                                <div className="space-y-4">
-                                    <h3 className="text-white text-xs font-black uppercase tracking-widest px-2">Kategori Harga</h3>
-                                    <div className="bg-[#1a2633] rounded-3xl p-6 border border-white/5 space-y-6">
-                                        <div className="h-1.5 bg-[#111a22] rounded-full relative">
-                                            <div className="absolute left-0 right-1/4 h-full bg-primary rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                                            <div className="absolute right-1/4 top-1/2 -translate-y-1/2 size-4 bg-white rounded-full border-4 border-primary"></div>
-                                        </div>
-                                        <p className="text-[#92adc9] text-[10px] uppercase font-black tracking-widest text-center">Hingga Rp 75jt / bln</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <h3 className="text-white text-xs font-black uppercase tracking-widest px-2">Tipe Papan</h3>
-                                    <div className="bg-[#1a2633] rounded-3xl p-2 border border-white/5">
-                                        {['Sangat Strategis', 'Digital/LED', 'Billboard Statis', 'Videotron'].map((t, i) => (
-                                            <div key={i} className="flex items-center gap-3 p-4 rounded-2xl hover:bg-white/5 cursor-pointer group">
-                                                <div className={`size-5 rounded border border-white/20 flex items-center justify-center transition-all ${i < 2 ? 'bg-primary border-primary' : ''}`}>
-                                                    {i < 2 && <span className="material-symbols-outlined text-white text-[14px]">check</span>}
-                                                </div>
-                                                <span className="text-[#92adc9] text-sm font-bold group-hover:text-white transition-colors">{t}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </aside>
-
-                            {/* Product List Area */}
-                            <div className="flex-1 flex flex-col gap-10">
-                                {/* Product Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {currentProducts.map((p) => (
-                                        <ProductCard key={p.id} {...p} onSelect={() => handleSelectProduct(p)} />
-                                    ))}
-                                </div>
-
-                                {/* Pagination Controls */}
-                                <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-4 pb-20 border-t border-white/5">
-                                    <p className="text-[#5a718a] text-xs font-bold uppercase tracking-widest">
-                                        Menampilkan <span className="text-white">{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, allProducts.length)}</span> dari <span className="text-white">{allProducts.length}</span> Produk
-                                    </p>
-
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            disabled={currentPage === 1}
-                                            onClick={() => handlePageChange(currentPage - 1)}
-                                            className="size-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[#92adc9] hover:text-white hover:bg-primary/20 disabled:opacity-30 disabled:hover:bg-white/5 transition-all"
-                                        >
-                                            <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-                                        </button>
-
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <button
-                                                key={page}
-                                                onClick={() => handlePageChange(page)}
-                                                className={`size-10 flex items-center justify-center rounded-xl text-xs font-black transition-all ${currentPage === page ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-transparent text-[#5a718a] hover:text-white hover:bg-white/5'}`}
-                                            >
-                                                {page}
-                                            </button>
-                                        ))}
-
-                                        <button
-                                            disabled={currentPage === totalPages}
-                                            onClick={() => handlePageChange(currentPage + 1)}
-                                            className="size-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[#92adc9] hover:text-white hover:bg-primary/20 disabled:opacity-30 disabled:hover:bg-white/5 transition-all"
-                                        >
-                                            <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            </CustomerLayout>
-
-            <FilterModal isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
-            <DateRangeModal isOpen={isDateOpen} onClose={() => setIsDateOpen(false)} onApply={handleApplyDate} />
-            <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} product={selectedProduct} />
-        </>
+      <CustomerLayout activePage="katalog" title="Katalog Produk" showSearch={true}>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </CustomerLayout>
     );
+  }
+
+  if (!user) {
+    return (
+      <CustomerLayout activePage="katalog" title="Katalog Produk" showSearch={true}>
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-white">Silakan login terlebih dahulu</p>
+        </div>
+      </CustomerLayout>
+    );
+  }
+
+  return (
+    <>
+      <Head>
+        <title>Katalog Produk - ReklameKu</title>
+      </Head>
+      <CustomerLayout activePage="katalog" title="Katalog Produk" showSearch={true}>
+        <main className="flex flex-col flex-1 bg-background-dark relative p-6 md:p-8 min-h-0 overflow-y-auto">
+          <div className="max-w-7xl mx-auto w-full space-y-6">
+            {/* Page Heading & Controls */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+              <div className="flex flex-col gap-1">
+                <h1 className="text-white text-3xl font-bold tracking-tight">Katalog Papan Reklame</h1>
+                <p className="text-gray-400 text-base font-normal max-w-xl">Jelajahi dan pilih lokasi papan reklame strategis untuk kampanye Anda berikutnya.</p>
+              </div>
+              <div className="flex bg-[#1a2633] p-1 rounded-lg border border-[#324d67]">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${viewMode === "grid" ? "bg-primary text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
+                >
+                  Grid View
+                </button>
+                <button
+                  onClick={() => setViewMode("map")}
+                  className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${viewMode === "map" ? "bg-primary text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
+                >
+                  Map View
+                </button>
+              </div>
+            </div>
+
+            {/* Filters Row */}
+            <div className="flex flex-col md:flex-row gap-4 items-center bg-[#1a2633] p-4 rounded-xl border border-[#324d67] shadow-sm">
+              <div className="flex-1 relative w-full">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-[18px]">search</span>
+                <input
+                  className="w-full bg-[#111a22] border border-[#324d67] rounded-lg h-10 pl-12 pr-4 text-white text-sm focus:ring-1 focus:ring-primary outline-none placeholder-gray-500"
+                  placeholder="Cari lokasi, nama produk..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-3 w-full md:w-auto">
+                <button
+                  onClick={() => setIsDateOpen(true)}
+                  className="flex items-center justify-center gap-2 px-4 h-10 rounded-lg border border-[#324d67] bg-[#1a2633] text-gray-300 hover:bg-[#233648] hover:text-white transition-all w-full md:w-auto"
+                >
+                  <span className="material-symbols-outlined text-primary text-[18px]">calendar_month</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">{dateRange}</span>
+                </button>
+                <button
+                  onClick={() => setIsFilterOpen(true)}
+                  className={`flex items-center justify-center gap-2 px-4 h-10 rounded-lg border transition-all w-full md:w-auto ${
+                    hasActiveFilters
+                      ? "bg-primary border-primary text-white"
+                      : "border-[#324d67] bg-[#1a2633] text-gray-300 hover:bg-[#233648] hover:text-white"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">tune</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Filter</span>
+                  {hasActiveFilters && (
+                    <span className="size-5 bg-white text-primary rounded-full text-[10px] font-bold flex items-center justify-center">{filters.types.length + (searchQuery ? 1 : 0)}</span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Active Filters */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Filter aktif:</span>
+                {searchQuery && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full border border-primary/20">
+                    "{searchQuery}"
+                    <button onClick={() => setSearchQuery("")} className="hover:text-primary-400">×</button>
+                  </span>
+                )}
+                {filters.types.map(type => (
+                  <span key={type} className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full border border-primary/20">
+                    {type}
+                    <button onClick={() => setFilters(prev => ({ ...prev, types: prev.types.filter(t => t !== type) }))} className="hover:text-primary-400">×</button>
+                  </span>
+                ))}
+                {filters.city && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full border border-primary/20">
+                    {filters.city}
+                    <button onClick={() => setFilters(prev => ({ ...prev, city: "" }))} className="hover:text-primary-400">×</button>
+                  </span>
+                )}
+                <button
+                  onClick={handleResetFilters}
+                  className="text-gray-500 hover:text-white text-xs font-medium underline ml-2"
+                >
+                  Hapus semua
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-8 items-start">
+              {/* Product List Area */}
+              <div className="flex-1 flex flex-col gap-6">
+                {/* View Mode Indicator */}
+                {viewMode === "map" && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-yellow-500">map</span>
+                    <span className="text-yellow-500 text-sm font-medium">Mode Peta - Menampilkan {currentProducts.length} lokasi</span>
+                  </div>
+                )}
+
+                {/* Product Grid */}
+                <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"}`}>
+                  {currentProducts.length > 0 ? (
+                    currentProducts.map((p) => (
+                      <ProductCard
+                        key={p.id}
+                        {...p}
+                        image={p.images && p.images.length > 0 ? p.images[0] : p.image}
+                        onSelect={() => handleSelectProduct(p)}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-10 text-gray-500">Tidak ada produk ditemukan</div>
+                  )}
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-6 pb-20 border-t border-[#324d67]">
+                  <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">
+                    Menampilkan{" "}
+                    <span className="text-white">
+                      {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredProducts.length)}
+                    </span>{" "}
+                    dari <span className="text-white">{filteredProducts.length}</span> Produk
+                  </p>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className="size-9 flex items-center justify-center rounded-lg bg-[#1a2633] border border-[#324d67] text-gray-400 hover:text-white hover:bg-[#233648] disabled:opacity-30 disabled:hover:bg-[#1a2633] transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`size-9 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${
+                          currentPage === page ? "bg-primary text-white shadow-sm" : "bg-transparent text-gray-400 hover:text-white hover:bg-[#1a2633]"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className="size-9 flex items-center justify-center rounded-lg bg-[#1a2633] border border-[#324d67] text-gray-400 hover:text-white hover:bg-[#233648] disabled:opacity-30 disabled:hover:bg-[#1a2633] transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </CustomerLayout>
+
+      <FilterModal
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApply={handleApplyFilters}
+        initialFilters={filters}
+      />
+      <DateRangeModal isOpen={isDateOpen} onClose={() => setIsDateOpen(false)} onApply={handleApplyDate} />
+      <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} product={selectedProduct} />
+    </>
+  );
 }

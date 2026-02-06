@@ -1,51 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Solvia Catalog System
 
-## Getting Started
+Sistem manajemen katalog dan pemesanan reklame digital (Billboard/Videotron) berbasis web. Aplikasi ini memfasilitasi interaksi antara Customer yang ingin menyewa titik reklame dan Admin yang mengelola inventaris serta pesanan.
 
-First, run the development server:
+## 🛠️ Instalasi & Persiapan
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Ikuti langkah-langkah berikut untuk menjalankan aplikasi di komputer lokal Anda.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Prasyarat
+- Node.js (Versi 18 atau terbaru disarankan)
+- PostgreSQL (Database)
+- Git (Opsional)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Langkah Instalasi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Clone Repository (atau download source code)**
+   ```bash
+   git clone <repository-url>
+   cd catalog
+   ```
 
-## Learn More
+2. **Install Dependensi**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Konfigurasi Environment**
+   Buat file `.env` di root project. Pastikan konfigurasi database sesuai dengan local environment Anda. Contoh variabel utama:
+   ```env
+   DATABASE_URL="postgresql://user:password@localhost:5432/solvia_db?schema=public"
+   NEXTAUTH_SECRET="generate_random_secret_here"
+   NEXTAUTH_URL="http://localhost:3000"
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Setup Database**
+   Lakukan migrasi database menggunakan Prisma untuk membuat tabel yang diperlukan.
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. **Jalankan Aplikasi**
+   ```bash
+   npm run dev
+   ```
+   Akses aplikasi di [http://localhost:3000](http://localhost:3000).
 
 ---
 
-Project notes for this workspace
-* Existing static HTML files from the parent folder were copied into `public/html/`.
-* Each file is available at `/<slug>` where `slug` is the filename without `.html` (e.g. `/katalog`).
-* The site uses Tailwind via CDN (same as the original files). For production builds consider integrating Tailwind locally.
+## 🔄 Alur Penggunaan (Workflow)
 
-Quick steps to run locally:
-```powershell
-cd catalog
-npm install
-npm run dev
-# browse http://localhost:3000
-```
+Berikut adalah panduan penggunaan sistem berdasarkan peran pengguna.
+
+### 👤 Customer Flow (Penyewa)
+
+1. **Registrasi & Login**
+   - Customer membuat akun baru melalui halaman Register.
+   - Login untuk mengakses fitur penyewaan.
+
+2. **Eksplorasi Produk**
+   - Masuk ke **Dashboard** atau menu **Katalog**.
+   - Melihat daftar titik reklame tersedia.
+   - Melakukan filter berdasarkan lokasi, harga, atau ketersediaan.
+
+3. **Membuat Pesanan (Booking)**
+   - Pilih produk yang diinginkan.
+   - Klik tombol **Pesan** atau ikon keranjang/sewa.
+   - **Konfigurasi Sewa**:
+     - Cek detail produk (Lokasi, Gambar, Spesifikasi).
+     - Pilih durasi sewa (Bulanan/Tahunan).
+     - Tentukan Tanggal Mulai tayang.
+   - Klik **Buat Pesanan**.
+
+4. **Kelola Pesanan**
+   - Akses menu **Pesanan Saya**.
+   - Melihat status (Pending, Disetujui, Aktif).
+   - Mengunduh Invoice/Tagihan.
+   - Melakukan pembatalan (jika status masih memungkinkan).
+
+5. **Bantuan**
+   - Menggunakan fitur **Chat** untuk menghubungi admin terkait negosiasi atau kendala teknis.
+
+### 🛡️ Admin Flow (Pengelola)
+
+1. **Login Admin**
+   - Masuk menggunakan kredensial admin.
+
+2. **Dashboard Monitoring**
+   - Melihat ringkasan bisnis: Total Pendapatan, Pesanan Baru, Occupancy Rate.
+
+3. **Manajemen Produk**
+   - **Tambah Produk**: Input data billboard baru (Foto, Harga, Lokasi, Dimensi).
+   - **Update Stock**: Mengubah status ketersediaan atau harga sewa.
+
+4. **Manajemen Pesanan**
+   - Memverifikasi pesanan masuk dari customer.
+   - Mengupdate status pesanan (Menyetujui pembayaran, Memulai masa tayang).
+   - Melakukan pembatalan paksa jika diperlukan.
+
+5. **Manajemen User**
+   - Melihat daftar customer terdaftar.
+   - Membalas pesan customer via menu Chat.
+
+---
+
+## 🔧 Teknologi Utama
+- **Framework**: Next.js (App Router / Pages Router)
+- **Styling**: Tailwind CSS
+- **Database**: PostgreSQL & Prisma ORM
+- **Icons**: Material Symbols / FontAwesome

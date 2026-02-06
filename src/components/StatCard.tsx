@@ -8,6 +8,8 @@ interface StatCardProps {
     trendUp?: boolean;
     trendColor?: string;
     iconBgColor?: string;
+    description?: string;
+    loading?: boolean;
 }
 
 export default function StatCard({
@@ -15,27 +17,81 @@ export default function StatCard({
     title,
     value,
     trend,
-    trendUp,
-    trendColor = 'text-green-400',
-    iconBgColor = 'bg-primary/20 text-primary',
+    trendUp = true,
+    trendColor = 'text-green-500',
+    iconBgColor = 'bg-blue-500/10 text-blue-400',
+    description,
+    loading = false,
 }: StatCardProps) {
-    return (
-        <div className="bg-[#233648] rounded-xl p-6 flex flex-col gap-4 border border-white/5 hover:border-primary/50 transition-colors">
-            <div className="flex justify-between items-start">
-                <div className={`p-2 rounded-lg ${iconBgColor}`}>
-                    <span className="material-symbols-outlined">{icon}</span>
+    if (loading) {
+        return (
+            <div className="card p-6 space-y-4">
+                <div className="flex justify-between items-start">
+                    <div className="skeleton w-12 h-12 rounded-xl" />
+                    <div className="skeleton w-16 h-6 rounded-full" />
                 </div>
-                {trend && (
-                    <span className={`text-sm font-medium flex items-center gap-1 ${trendColor}`}>
-                        {trendUp !== false && <span className="material-symbols-outlined text-sm">trending_up</span>}
-                        {trend}
-                    </span>
+                <div className="space-y-2">
+                    <div className="skeleton w-24 h-4 rounded" />
+                    <div className="skeleton w-20 h-8 rounded" />
+                    <div className="skeleton w-32 h-3 rounded" />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <article className="card card-hover group relative">
+            <div className="p-6 space-y-4">
+                {/* Header with Icon and Trend */}
+                <div className="flex justify-between items-start">
+                    <div className={`p-3 rounded-xl ${iconBgColor} group-hover:scale-110 transition-all duration-300 hover-glow`}>
+                        <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                            {icon}
+                        </span>
+                    </div>
+                    
+                    {trend && (
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 ${trendColor}`}>
+                            <span className={`material-symbols-outlined text-sm ${trendUp ? 'rotate-0' : 'rotate-180'} transition-transform duration-300`}>
+                                trending_up
+                            </span>
+                            <span className="text-sm font-semibold">{trend}</span>
+                        </div>
+                    )}
+                </div>
+                
+                {/* Content */}
+                <div className="space-y-2">
+                    <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider">
+                        {title}
+                    </h3>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-display-md text-white group-hover:text-blue-400 transition-colors duration-300">
+                            {value}
+                        </span>
+                    </div>
+                    {description && (
+                        <p className="text-gray-500 text-sm leading-relaxed">
+                            {description}
+                        </p>
+                    )}
+                </div>
+                
+                {/* Progress Bar (Optional Enhancement) */}
+                {trend && trendUp && (
+                    <div className="pt-2">
+                        <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                            <div 
+                                className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000 ease-out"
+                                style={{ width: '75%' }}
+                            />
+                        </div>
+                    </div>
                 )}
             </div>
-            <div>
-                <p className="text-text-secondary text-sm font-medium">{title}</p>
-                <h3 className="text-white text-2xl font-bold mt-1">{value}</h3>
-            </div>
-        </div>
+            
+            {/* Hover Effect Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
+        </article>
     );
 }

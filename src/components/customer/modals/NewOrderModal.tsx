@@ -1,55 +1,128 @@
-import React from 'react';
-import Modal from '../../ui/Modal';
+import React, { useState, useEffect } from "react";
+import Modal from "../../ui/Modal";
+
+interface Product {
+  id: number;
+  name: string;
+  visibility: string;
+  price_daily: number;
+  location: string;
+  images?: string[];
+}
 
 interface NewOrderModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSelectProduct: (product: any) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onSelectProduct: (product: Product) => void;
 }
 
 export default function NewOrderModal({ isOpen, onClose, onSelectProduct }: NewOrderModalProps) {
-    const availableProducts = [
-        { id: 1, name: 'Tol Jagorawi KM 4', type: 'DIGITAL', price: 'Rp 32.000.000', location: 'Jakarta Timur', image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&q=80' },
-        { id: 2, name: 'Bundaran HI', type: 'STATIS', price: 'Rp 125.000.000', location: 'Jakarta Pusat', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80' },
-        { id: 3, name: 'Sudirman CBD', type: 'LED', price: 'Rp 18.000.000', location: 'Jakarta Selatan', image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&q=80' },
-        { id: 4, name: 'Tol Cikampek KM 15', type: 'DIGITAL', price: 'Rp 22.000.000', location: 'Karawang', image: 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?auto=format&fit=crop&w=800&q=80' }
-    ];
+  const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Pilih Produk Reklame" maxWidth="max-w-4xl">
-            <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {availableProducts.map((product) => (
-                        <button
-                            key={product.id}
-                            onClick={() => onSelectProduct(product)}
-                            className="bg-card-dark border border-white/5 rounded-2xl p-4 flex gap-4 hover:border-primary transition-all text-left group"
-                        >
-                            <div
-                                className="size-24 rounded-xl bg-cover bg-center shrink-0 shadow-lg group-hover:scale-105 transition-transform"
-                                style={{ backgroundImage: `url('${product.image}')` }}
-                            ></div>
-                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                <h4 className="text-white font-black truncate mb-1">{product.name}</h4>
-                                <p className="text-[#92adc9] text-[10px] uppercase font-bold tracking-widest mb-2">{product.type} • {product.location}</p>
-                                <p className="text-primary font-black">{product.price}</p>
-                            </div>
-                            <div className="flex items-center">
-                                <span className="material-symbols-outlined text-[#5a718a] group-hover:text-primary transition-colors">chevron_right</span>
-                            </div>
-                        </button>
-                    ))}
-                </div>
+  useEffect(() => {
+    if (isOpen) {
+      const fetchProducts = async () => {
+        try {
+          const response = await fetch("/api/customer/products?limit=10");
+          if (response.ok) {
+            const data = await response.json();
+            setAvailableProducts(data.products || []);
+          }
+        } catch (error) {
+          console.error("Error fetching products:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-                <div className="pt-4 border-t border-white/5 flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="px-6 py-2.5 text-xs font-bold text-[#92adc9] hover:text-white transition-colors"
-                    >
-                        Batal
-                    </button>
-                </div>
+      fetchProducts();
+    }
+  }, [isOpen]);
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Pilih Produk Reklame" size="xl">
+      <div className="space-y-6">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="relative">
+              <div className="w-12 h-12 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-t-blue-400 rounded-full animate-ping"></div>
             </div>
-        </Modal>
-    );
+            <p className="text-gray-400 text-sm font-medium">Memuat produk tersedia...</p>
+          </div>
+        ) : (
+          <>
+            {/* Header Info */}
+            <div className="bg-[#1a2633] border border-[#324d67] rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="size-10 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-[20px]">ad_units</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm">Produk Reklame Tersedia</h3>
+                  <p className="text-gray-400 text-xs text-medium">Pilih produk yang ingin Anda pesan</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+              {availableProducts.length > 0 ? (
+                availableProducts.map((product) => (
+                  <button 
+                    key={product.id} 
+                    onClick={() => onSelectProduct(product)} 
+                    className="group bg-[#1a2633] border border-[#324d67] hover:border-primary/50 hover:bg-[#233648] rounded-xl p-3 flex gap-4 transition-all duration-200 text-left w-full"
+                  >
+                    {/* Product Image */}
+                    <div className="relative shrink-0">
+                      <div
+                        className="size-16 rounded-lg bg-cover bg-center border border-[#324d67] group-hover:border-primary/30 transition-colors"
+                        style={{ 
+                          backgroundImage: product.images && product.images.length > 0 
+                            ? `url('${product.images[0]}')`
+                            : 'linear-gradient(135deg, #111a22 0%, #1a2633 100%)'
+                        }}
+                      >
+                        {(!product.images || product.images.length === 0) && (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="material-symbols-outlined text-gray-500 text-[20px]">image_not_supported</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Availability Badge */}
+                      <div className="absolute -top-1 -right-1 size-3 bg-emerald-500 border-2 border-[#1a2633] rounded-full shadow-sm"></div>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                       <h4 className="text-white font-bold text-sm truncate group-hover:text-primary transition-colors">{product.name}</h4>
+                       <div className="flex items-center gap-1 text-gray-500 text-xs mt-0.5">
+                          <span className="material-symbols-outlined text-[14px]">location_on</span>
+                          <span className="truncate">{product.location}</span>
+                       </div>
+                       <p className="text-primary text-xs font-bold mt-1">
+                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(product.price_daily)} / hari
+                       </p>
+                    </div>
+                    
+                    {/* Arrow Icon */}
+                    <div className="flex items-center justify-center text-gray-600 group-hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center text-gray-500 bg-[#1a2633] border border-[#324d67] rounded-xl border-dashed">
+                    <span className="material-symbols-outlined text-4xl mb-2 opacity-50">inventory_2</span>
+                    <p className="text-sm font-medium">Tidak ada produk tersedia</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
+  );
 }

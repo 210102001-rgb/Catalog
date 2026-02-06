@@ -1,28 +1,46 @@
-import { useState } from 'react';
-import Head from 'next/head';
+import { useState, useEffect } from "react";
+import Head from "next/head";
 
-type Chat = {
-  id: string;
-  customer: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-  status: 'online' | 'offline';
-};
+interface Chat {
+  id: number;
+  sender: {
+    name: string;
+  };
+  message: string;
+  created_at: string;
+  read: boolean;
+}
 
 export default function ManageChat() {
-  const [activeChat, setActiveChat] = useState<string | null>(null);
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: '1',
-      customer: 'John Doe',
-      lastMessage: 'Berapa harga untuk baliho ukuran 3x6m?',
-      time: '10:30',
-      unread: 2,
-      status: 'online'
-    },
-    // Add more sample chats as needed
-  ]);
+  const [activeChat, setActiveChat] = useState<number | null>(null);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const response = await fetch("/api/admin/chat/customers");
+        if (response.ok) {
+          const data = await response.json();
+          setChats(data.chats || []);
+        }
+      } catch (error) {
+        console.error("Error fetching chats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
@@ -47,75 +65,61 @@ export default function ManageChat() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {chats.map((chat) => (
-            <div
-              key={chat.id}
-              className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                activeChat === chat.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-              }`}
-              onClick={() => setActiveChat(chat.id)}
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                      <span className="text-gray-600 dark:text-gray-300">
-                        {chat.customer.charAt(0)}
-                      </span>
+          {chats.length > 0 ? (
+            chats.map((chat) => (
+              <div
+                key={chat.id}
+                className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${activeChat === chat.id ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
+                onClick={() => setActiveChat(chat.id)}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                        <span className="text-gray-600 dark:text-gray-300">{chat.sender?.name?.charAt(0) || "U"}</span>
+                      </div>
+                      <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 bg-green-500" />
                     </div>
-                    <span
-                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${
-                        chat.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
-                      }`}
-                    />
+                    <div>
+                      <h3 className="font-medium text-gray-900 dark:text-white">{chat.sender?.name || "Unknown User"}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-45">{chat.message}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">{chat.customer}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[180px]">
-                      {chat.lastMessage}
-                    </p>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(chat.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
+                    {!chat.read && <span className="mt-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">1</span>}
                   </div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{chat.time}</span>
-                  {chat.unread > 0 && (
-                    <span className="mt-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {chat.unread}
-                    </span>
-                  )}
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+              <p>Tidak ada percakapan ditemukan</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 flex flex-col hidden md:flex">
+      <div className="flex-1 flex flex-col md:flex">
         {activeChat ? (
           <>
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center">
               <div className="relative mr-3">
                 <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                  <span className="text-gray-600 dark:text-gray-300">
-                    {chats.find(c => c.id === activeChat)?.customer.charAt(0) || 'J'}
-                  </span>
+                  <span className="text-gray-600 dark:text-gray-300">{chats.find((c) => c.id === activeChat)?.sender?.name?.charAt(0) || "U"}</span>
                 </div>
                 <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 bg-green-500" />
               </div>
               <div>
-                <h2 className="font-medium text-gray-900 dark:text-white">
-                  {chats.find(c => c.id === activeChat)?.customer || 'John Doe'}
-                </h2>
+                <h2 className="font-medium text-gray-900 dark:text-white">{chats.find((c) => c.id === activeChat)?.sender?.name || "Unknown User"}</h2>
                 <p className="text-xs text-green-500">Online</p>
               </div>
             </div>
 
             <div className="flex-1 p-4 overflow-y-auto">
               {/* Chat messages would go here */}
-              <div className="text-center text-sm text-gray-500 dark:text-gray-400 my-4">
-                Mulai percakapan dengan pelanggan Anda
-              </div>
+              <div className="text-center text-sm text-gray-500 dark:text-gray-400 my-4">Mulai percakapan dengan pelanggan Anda</div>
             </div>
 
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
